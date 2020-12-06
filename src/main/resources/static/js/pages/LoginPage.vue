@@ -39,6 +39,9 @@
                             {{alertMessage}}
                         </v-alert>
                     </div>
+                    <div class="text-center ml-5 mt-5">
+                        <a href="/registration">Зарегистрироваться</a>
+                    </div>
                 </v-container>
             </v-card-text>
         </form>

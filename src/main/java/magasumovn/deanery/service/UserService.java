@@ -37,4 +37,16 @@ public class UserService implements UserDetailsService {
             return true;
         }
     }
+
+    public boolean updateUser(User user, User authUser) {
+        User userFromDb = userRepo.findUserByName(user.getName());
+
+        if (userFromDb != null && !userFromDb.getId().equals(authUser.getId())) {
+            return false;
+        } else {
+            user.setName(authUser.getName());
+            userRepo.save(user);
+            return true;
+        }
+    }
 }
