@@ -7,6 +7,7 @@ import Students from "pages/Students.vue";
 import Subjects from "pages/Subjects.vue";
 import Registration from "pages/Registration.vue";
 import Profile from "pages/Profile.vue";
+import Error404 from "pages/Error404.vue";
 
 Vue.use(VueRouter)
 
@@ -19,7 +20,7 @@ const routes = [
     {path: '/subjects', component: Subjects},
     {path: '/students', component: Students},
     {path: '/profile', component: Profile},
-    {path: '*', component: Groups}
+    {path: '*', component: Error404}
 ]
 
 export default new VueRouter({
