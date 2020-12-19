@@ -42,13 +42,13 @@
         </v-dialog>
 
         <v-data-table
-                :headers="groupsHeaders"
+                :headers="admin ? adminGroupsHeaders : groupsHeaders"
                 :items="groups"
                 @click:row="openDialog"
                 sort-by="id"
                 class="elevation-1"
         >
-            <template v-slot:top>
+            <template v-if="admin" v-slot:top>
                 <v-toolbar flat color="white">
                     <v-spacer/>
                     <v-dialog v-model="groupsDialog" max-width="500px">
@@ -82,7 +82,7 @@
                     </v-dialog>
                 </v-toolbar>
             </template>
-            <template v-slot:item.action="{ item }">
+            <template v-if="admin" v-slot:item.action="{ item }">
                 <v-icon
                         small
                         class="mr-2"
@@ -104,6 +104,7 @@
 <script>
     import groupsApi from "../api/group";
     import studentApi from "../api/student";
+    import {mapState} from 'vuex';
 
     export default {
         name: "GroupsTable",
@@ -111,7 +112,7 @@
         data() {
             return {
                 groupsDialog: false,
-                groupsHeaders: [
+                adminGroupsHeaders: [
                     {
                         text: 'Номер группы',
                         value: 'groupNumber'
@@ -123,6 +124,16 @@
                     {
                         text: 'Действия',
                         value: 'action'
+                    }
+                ],
+                groupsHeaders: [
+                    {
+                        text: 'Номер группы',
+                        value: 'groupNumber'
+                    },
+                    {
+                        text: 'Название группы',
+                        value: 'groupName'
                     }
                 ],
                 editedGroupIndex: -1,
@@ -138,10 +149,15 @@
                 action: 0,
                 rules: {
                     required: value => value.length > 0 || 'Заполните поле!'
-                }
+                },
+                admin: true
             }
         },
+        created() {
+            this.admin = this.profile.role === 'ADMIN';
+        },
         computed: {
+            ...mapState(['profile']),
             groupsFormTitle() {
                 return this.editedGroupIndex === -1 ? 'Новая группа' : 'Редактировать';
             }
@@ -161,11 +177,11 @@
                 if ((this.$refs.form.validate())) {
                     if (this.editedGroupIndex > -1) {
                         Object.assign(this.groups[this.editedGroupIndex], this.editedGroup);
-                        groupsApi.update(this.editedGroup);
+                        groupsApi.update(this.editedGroup).catch(reason => alert('ERROR'));
                     } else {
                         groupsApi.save(this.editedGroup).then(result =>
                             result.json().then(data => this.groups.push(data))
-                        );
+                        ).catch(reason => alert('ERROR'));
                     }
                     this.groupsClose();
                 }
@@ -181,10 +197,13 @@
                 const index = this.groups.indexOf(item);
                 let isDeleted = confirm('Удалить группу ?') && this.groups.splice(index, 1);
                 if (isDeleted) {
-                    groupsApi.remove(item.groupNumber);
+                    groupsApi.remove(item.groupNumber).catch(reason => alert('ERROR'));
                 }
             },
             openDialog(value) {
+                if (!this.admin) {
+                    return;
+                }
                 if (this.action !== 1) {
                     this.groupStudents = [];
                     this.selectedGroup = value.groupName;
@@ -194,7 +213,7 @@
                                 this.groupStudents.push(student);
                             })
                         })
-                    });
+                    }).catch(reason => alert('ERROR'));
                     this.dialog = true;
                 } else {
                     this.action = 0;

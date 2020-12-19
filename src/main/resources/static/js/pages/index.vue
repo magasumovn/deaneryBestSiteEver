@@ -55,6 +55,14 @@
             >
                 Оценки
             </v-btn>
+            <v-btn
+                v-if="profile"
+                :disabled="$route.path === '/profile'"
+                text
+                href="/profile"
+            >
+                Профиль
+            </v-btn>
         </v-app-bar>
         <v-content>
             <router-view></router-view>

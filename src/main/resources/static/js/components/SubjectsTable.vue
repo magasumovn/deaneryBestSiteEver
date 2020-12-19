@@ -1,11 +1,11 @@
 <template>
     <v-data-table
-            :headers="subjectsHeaders"
+            :headers="admin ? adminSubjectsHeaders : subjectsHeaders"
             :items="subjects"
             sort-by="id"
             class="elevation-1"
     >
-        <template v-slot:top>
+        <template v-if="admin" v-slot:top>
             <v-toolbar flat color="white">
                 <v-col cols="2" class="mt-5">
                     <v-select
@@ -55,7 +55,7 @@
                 </v-dialog>
             </v-toolbar>
         </template>
-        <template v-slot:item.action="{ item }">
+        <template v-if="admin" v-slot:item.action="{ item }">
             <v-icon
                     small
                     class="mr-2"
@@ -75,6 +75,7 @@
 
 <script>
     import subjectsApi from "../api/subject";
+    import {mapState} from "vuex";
 
     export default {
         name: "SubjectsTable",
@@ -82,7 +83,7 @@
             return {
                 subjects: [],
                 subjectsDialog: false,
-                subjectsHeaders: [
+                adminSubjectsHeaders: [
                     {
                         text: 'Название предмета',
                         value: 'subjectName'
@@ -94,6 +95,16 @@
                     {
                         text: 'Действия',
                         value: 'action'
+                    }
+                ],
+                subjectsHeaders: [
+                    {
+                        text: 'Название предмета',
+                        value: 'subjectName'
+                    },
+                    {
+                        text: 'Курс',
+                        value: 'courseName'
                     }
                 ],
                 editedSubjectIndex: -1,
@@ -109,10 +120,12 @@
                 selectedCourse: 'Все',
                 rules: {
                     required: value => value.length > 0 || 'Заполните поле!',
-                }
+                },
+                admin: true
             }
         },
         computed: {
+            ...mapState(['profile']),
             subjectsFormTitle() {
                 return this.editedSubjectIndex === -1 ? 'Новый предмет' : 'Редактировать';
             }
@@ -132,11 +145,11 @@
                 if ((this.$refs.form.validate())) {
                     if (this.editedSubjectIndex > -1) {
                         Object.assign(this.subjects[this.editedSubjectIndex], this.editedSubject);
-                        subjectsApi.update(this.editedSubject);
+                        subjectsApi.update(this.editedSubject).catch(reason => alert('ERROR'));
                     } else {
                         subjectsApi.save(this.editedSubject).then(result =>
                             result.json().then(data => this.subjects.push(data))
-                        );
+                        ).catch(reason => alert('ERROR'));
                     }
                     this.subjectsClose();
                 }
@@ -150,7 +163,7 @@
                 const index = this.subjects.indexOf(item);
                 let isDeleted = confirm('Удалить предмет ?') && this.subjects.splice(index, 1);
                 if (isDeleted) {
-                    subjectsApi.remove(item.subjectID);
+                    subjectsApi.remove(item.subjectID).catch(reason => alert('ERROR'));
                 }
             },
             courseChange() {
@@ -161,17 +174,20 @@
                             this.subjects.push(subject);
                         })
                     })
-                })
+                }).catch(reason => alert('ERROR'));
             }
         },
         created() {
+            console.log(this.profile);
+            this.admin = this.profile.role === 'ADMIN';
+
             subjectsApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
                         this.subjects.push(element);
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
         }
     }
 </script>

@@ -21,6 +21,9 @@ public class User implements UserDetails {
 
     private String name;
 
+    private String photoUrl = "user.png";
+    private String role = "USER";
+
     public Long getId() {
         return id;
     }

@@ -6,6 +6,7 @@ import Performance from "pages/Performance.vue";
 import Students from "pages/Students.vue";
 import Subjects from "pages/Subjects.vue";
 import Registration from "pages/Registration.vue";
+import Profile from "pages/Profile.vue";
 
 Vue.use(VueRouter)
 
@@ -17,6 +18,7 @@ const routes = [
     {path: '/performances', component: Performance},
     {path: '/subjects', component: Subjects},
     {path: '/students', component: Students},
+    {path: '/profile', component: Profile},
     {path: '*', component: Groups}
 ]
 

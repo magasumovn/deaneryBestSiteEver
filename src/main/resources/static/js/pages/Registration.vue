@@ -87,7 +87,7 @@ export default {
                         this.alert = true;
                     }
                 })
-            })
+            }).catch(reason => alert('ERROR'));
         }
     }
 }

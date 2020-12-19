@@ -1,6 +1,6 @@
 <template>
     <v-data-table
-            :headers="performancesHeaders"
+            :headers="admin ? adminPerformancesHeaders : performancesHeaders"
             :items="performances"
             sort-by="id"
             class="elevation-1"
@@ -32,7 +32,7 @@
                     </v-col>
                 </v-row>
                 <v-spacer/>
-                <v-dialog v-model="performancesDialog" max-width="500px">
+                <v-dialog v-if="admin" v-model="performancesDialog" max-width="500px">
                     <template v-slot:activator="{ on }">
                         <v-btn color="primary" dark class="mb-2" v-on="on">Добавить оценку</v-btn>
                     </template>
@@ -90,7 +90,7 @@
                 </v-dialog>
             </v-toolbar>
         </template>
-        <template v-slot:item.action="{ item }">
+        <template v-if="admin" v-slot:item.action="{ item }">
             <v-icon
                     small
                     class="mr-2"
@@ -112,6 +112,7 @@
     import performancesApi from "../api/performance";
     import studentsApi from "../api/student";
     import subjectsApi from "../api/subject";
+    import {mapState} from "vuex";
 
     export default {
         name: "PerformancesTable",
@@ -121,7 +122,7 @@
                 subjectNames: [],
                 studentNames: [],
                 performancesDialog: false,
-                performancesHeaders: [
+                adminPerformancesHeaders: [
                     {
                         text: 'Имя студента',
                         value: 'student.studentName'
@@ -143,6 +144,24 @@
                         value: 'action'
                     }
                 ],
+                performancesHeaders: [
+                    {
+                        text: 'Имя студента',
+                        value: 'student.studentName'
+                    },
+                    {
+                        text: 'Название предмета',
+                        value: 'subject.subjectName'
+                    },
+                    {
+                        text: 'Номер семестра',
+                        value: 'semesterNumber'
+                    },
+                    {
+                        text: 'Оценка',
+                        value: 'mark'
+                    }
+                ],
                 editedPerformanceIndex: -1,
                 editedPerformance: {
                     student: {},
@@ -162,10 +181,12 @@
                 rules: {
                     required: value => (!!(value.length > 0 || parseInt(value))) || 'Заполните поле!',
                     requiredSelect: value => ("studentName" in value || "subjectName" in value) || 'Заполните поле!'
-                }
+                },
+                admin: true
             };
         },
         computed: {
+            ...mapState(['profile']),
             performancesFormTitle() {
                 return this.editedPerformanceIndex === -1 ? 'Новая оценка' : 'Редактировать';
             }
@@ -185,11 +206,11 @@
                 if ((this.$refs.form.validate())) {
                     if (this.editedPerformanceIndex > -1) {
                         Object.assign(this.performances[this.editedPerformanceIndex], this.editedPerformance);
-                        performancesApi.update(this.editedPerformance);
+                        performancesApi.update(this.editedPerformance).catch(reason => alert('ERROR'));
                     } else {
                         performancesApi.save(this.editedPerformance).then(result =>
                             result.json().then(data => this.performances.push(data))
-                        );
+                        ).catch(reason => alert('ERROR'));
                     }
                     this.performanceClose();
                 }
@@ -203,7 +224,7 @@
                 const index = this.performances.indexOf(item);
                 let isDeleted = confirm('Удалить оценку?') && this.performances.splice(index, 1);
                 if (isDeleted) {
-                    performancesApi.remove(item);
+                    performancesApi.remove(item).catch(reason => alert('ERROR'));
                 }
             },
             markChange() {
@@ -216,7 +237,7 @@
                             }
                         })
                     })
-                })
+                }).catch(reason => alert('ERROR'));
             },
             updateList() {
                 this.performances = [];
@@ -228,31 +249,33 @@
                             }
                         });
                     })
-                );
+                ).catch(reason => alert('ERROR'));
             }
         },
         created() {
+            this.admin = this.profile.role === 'ADMIN';
+
             studentsApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
                         this.studentNames.push({text: element.studentName, value: element});
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
             subjectsApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
                         this.subjectNames.push({text: element.subjectName, value: element});
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
             performancesApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
                         this.performances.push(element);
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
         }
     }
 </script>

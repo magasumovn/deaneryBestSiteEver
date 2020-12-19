@@ -54,7 +54,7 @@
                         this.groupNames.push({text: element.groupName, value: element});
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
             studentsApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
@@ -62,7 +62,7 @@
                         this.studentNames.push({text: element.studentName, value: element});
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
             subjectsApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
@@ -70,15 +70,15 @@
                         this.subjectNames.push({text: element.subjectName, value: element});
                     });
                 })
-            );
+            ).catch(reason => alert('ERROR'));
             performancesApi.get().then(result =>
                 result.json().then(data => {
                     data.forEach(element => {
                         this.performances.push(element);
                     });
                 })
-            );
-        }
+            ).catch(reason => alert('ERROR'));
+        },
     }
 </script>
 

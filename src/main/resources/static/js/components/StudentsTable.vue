@@ -1,11 +1,11 @@
 <template>
     <v-data-table
-            :headers="studentsHeaders"
+            :headers="admin ? adminStudentsHeaders : studentsHeaders"
             :items="students"
             sort-by="id"
             class="elevation-1"
     >
-        <template v-slot:top>
+        <template v-if="admin" v-slot:top>
             <v-toolbar flat color="white">
                 <v-spacer/>
                 <v-dialog v-model="studentsDialog" max-width="500px">
@@ -73,7 +73,7 @@
                 </v-dialog>
             </v-toolbar>
         </template>
-        <template v-slot:item.action="{ item }">
+        <template v-if="admin" v-slot:item.action="{ item }">
             <v-icon
                     small
                     class="mr-2"
@@ -95,6 +95,7 @@
     import {validationMixin} from 'vuelidate'
     import {numeric} from 'vuelidate/lib/validators'
     import studentsApi from "../api/student";
+    import {mapState} from "vuex";
 
     export default {
         name: "StudentsTable",
@@ -107,7 +108,7 @@
         data() {
             return {
                 studentsDialog: false,
-                studentsHeaders: [
+                adminStudentsHeaders: [
                     {
                         text: 'ФИО',
                         value: 'studentName'
@@ -129,6 +130,24 @@
                         value: 'action'
                     }
                 ],
+                studentsHeaders: [
+                    {
+                        text: 'ФИО',
+                        value: 'studentName'
+                    },
+                    {
+                        text: 'Паспорт',
+                        value: 'passport'
+                    },
+                    {
+                        text: 'Номер телефона',
+                        value: 'phoneNumber'
+                    },
+                    {
+                        text: 'Название группы',
+                        value: 'group.groupName'
+                    }
+                ],
                 editedStudentIndex: -1,
                 editedStudent: {
                     studentName: '',
@@ -147,10 +166,15 @@
                 rules: {
                     required: value => value.length > 0 || 'Заполните поле!',
                     requiredSelect : value => "groupName" in value || 'Заполните поле!'
-                }
+                },
+                admin: true
             }
         },
+        created() {
+            this.admin = this.profile.role === 'ADMIN';
+        },
         computed: {
+            ...mapState(['profile']),
             studentsFormTitle() {
                 return this.editedStudentIndex === -1 ? 'Новый студент' : 'Редактировать';
             },
@@ -190,11 +214,11 @@
                         this.editedStudent.passport = this.passport;
                         if (this.editedStudentIndex > -1) {
                             Object.assign(this.students[this.editedStudentIndex], this.editedStudent);
-                            studentsApi.update(this.editedStudent);
+                            studentsApi.update(this.editedStudent).catch(reason => alert('ERROR'));
                         } else {
                             studentsApi.save(this.editedStudent).then(result =>
                                 result.json().then(data => this.students.push(data))
-                            );
+                            ).catch(reason => alert('ERROR'));
                         }
                         this.studentClose();
                     }
@@ -211,7 +235,7 @@
                 const index = this.students.indexOf(item);
                 let isDeleted = confirm('Удалить студента ?') && this.students.splice(index, 1);
                 if (isDeleted) {
-                    studentsApi.remove(item.studentID);
+                    studentsApi.remove(item.studentID).catch(reason => alert('ERROR'));
                 }
             },
         },
